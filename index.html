@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spark - Modern Dating Experience</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(71, 85, 105, 1);
+    }
+
+    /* Card Swipe Animations */
+    .card-swipe-like {
+      transform: translateX(120%) rotate(25deg) !important;
+      opacity: 0 !important;
+      transition: transform 0.4s ease-out, opacity 0.3s ease-out !important;
+    }
+    .card-swipe-dislike {
+      transform: translateX(-120%) rotate(-25deg) !important;
+      opacity: 0 !important;
+      transition: transform 0.4s ease-out, opacity 0.3s ease-out !important;
+    }
+    .card-swipe-superlike {
+      transform: translateY(-120%) scale(1.1) !important;
+      opacity: 0 !important;
+      transition: transform 0.4s ease-out, opacity 0.3s ease-out !important;
+    }
+
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.9) 100%);
+      backdrop-filter: blur(12px);
+    }
+
+    /* Gradient Glowing Text */
+    .gradient-text {
+      background: linear-gradient(135deg, #f43f5e 0%, #fb7185 50%, #e11d48 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Pulse effects */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.08); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-glow {
+      animation: pulse-ring 3s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col justify-between overflow-hidden bg-slate-950 text-slate-100 antialiased selection:bg-rose-500 selection:text-white">
+
+  <!-- TOP HEADER / NAV -->
+  <header class="w-full h-16 border-b border-slate-800/80 px-4 md:px-8 flex items-center justify-between z-30 bg-slate-950/80 backdrop-blur-md shrink-0">
+    <!-- Logo -->
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('explore')">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400 p-0.5 shadow-lg shadow-rose-500/20">
+        <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+          <i class="fa-solid font-bold fa-fire text-transparent bg-clip-text bg-gradient-to-tr from-rose-500 to-pink-500 text-xl"></i>
+        </div>
+      </div>
+      <span class="font-extrabold text-2xl tracking-tight text-white">spark<span class="text-rose-500">.</span></span>
+    </div>
+
+    <!-- Center Navigation Tabs (Desktop) -->
+    <nav class="hidden md:flex items-center space-x-1 bg-slate-900/90 p-1.5 rounded-full border border-slate-800">
+      <button onclick="switchTab('explore')" id="nav-explore" class="tab-btn px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 bg-rose-500 text-white shadow-md shadow-rose-500/25 flex items-center gap-2">
+        <i class="fa-solid fa-layer-group"></i> Explore
+      </button>
+      <button onclick="switchTab('matches')" id="nav-matches" class="tab-btn px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center gap-2 relative">
+        <i class="fa-solid fa-comments"></i> Matches & Chats
+        <span id="unread-badge" class="hidden absolute top-1 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse"></span>
+      </button>
+      <button onclick="switchTab('profile')" id="nav-profile" class="tab-btn px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center gap-2">
+        <i class="fa-solid fa-user"></i> Profile
+      </button>
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="flex items-center space-x-3">
+      <button onclick="openFilterModal()" class="w-10 h-10 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-800 flex items-center justify-center text-slate-300 hover:text-white transition-all" title="Preferences">
+        <i class="fa-solid fa-sliders text-sm"></i>
+      </button>
+      <div onclick="switchTab('profile')" class="w-10 h-10 rounded-full bg-slate-800 border-2 border-rose-500/50 p-0.5 cursor-pointer hover:scale-105 transition-transform overflow-hidden">
+        <img id="header-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300" alt="Profile" class="w-full h-full object-cover rounded-full">
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 relative w-full h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)] max-w-7xl mx-auto px-2 sm:px-4 py-2 overflow-hidden flex flex-col items-center justify-center">
+
+    <!-- ==================== VIEW 1: EXPLORE / SWIPE ==================== -->
+    <section id="view-explore" class="w-full h-full flex flex-col items-center justify-between max-w-md mx-auto relative">
+      
+      <!-- Cards Stack Container -->
+      <div id="card-stack" class="relative w-full flex-1 my-2 flex items-center justify-center max-h-[620px]">
+        <!-- Dynamic Cards inserted here via JS -->
+      </div>
+
+      <!-- No More Profiles Fallback -->
+      <div id="no-more-cards" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-slate-900/60 backdrop-blur-md rounded-3xl border border-slate-800">
+        <div class="w-20 h-20 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mb-4 text-rose-500 text-3xl pulse-glow">
+          <i class="fa-solid fa-radar"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-white mb-2">That's everyone for now!</h3>
+        <p class="text-slate-400 text-sm mb-6 max-w-xs">We've run out of potential matches in your area. Adjust your filters or check back later!</p>
+        <button onclick="resetExploreCards()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-semibold shadow-lg shadow-rose-500/25 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-rotate-right"></i> Reset & Discover Again
+        </button>
+      </div>
+
+      <!-- Control Buttons Footer -->
+      <div class="w-full py-3 flex items-center justify-center gap-4 sm:gap-6 shrink-0">
+        <button onclick="handleSwipeAction('dislike')" class="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 text-rose-500 hover:scale-110 active:scale-95 hover:bg-rose-500/10 hover:border-rose-500/40 flex items-center justify-center text-xl transition-all shadow-lg" title="Dislike (Left Key)">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <button onclick="handleSwipeAction('superlike')" class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 text-sky-400 hover:scale-110 active:scale-95 hover:bg-sky-500/10 hover:border-sky-500/40 flex items-center justify-center text-lg transition-all shadow-lg" title="Super Like (Up Key)">
+          <i class="fa-solid fa-star"></i>
+        </button>
+
+        <button onclick="handleSwipeAction('like')" class="w-14 h-14 rounded-full bg-gradient-to-tr from-rose-500 to-pink-500 text-white hover:scale-110 active:scale-95 shadow-lg shadow-rose-500/30 flex items-center justify-center text-xl transition-all" title="Like (Right Key)">
+          <i class="fa-solid fa-heart"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: MATCHES & CHATS ==================== -->
+    <section id="view-matches" class="hidden w-full h-full flex flex-col md:flex-row gap-4 bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-3xl overflow-hidden p-2 sm:p-4">
+      
+      <!-- Left Sidebar: Matches List & Chat History -->
+      <div id="chat-sidebar" class="w-full md:w-80 lg:w-96 h-full flex flex-col border-r border-slate-800/60 pr-0 md:pr-4">
+        
+        <!-- Search Matches -->
+        <div class="relative mb-4">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
+          <input type="text" id="match-search" onkeyup="filterMatchesList()" placeholder="Search matches..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 transition-colors">
+        </div>
+
+        <!-- Horizontal New Matches Carousel -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">New Sparks</span>
+            <span id="matches-count-badge" class="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-semibold">0</span>
+          </div>
+          <div id="new-matches-row" class="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+            <!-- New match avatar bubbles generated here -->
+          </div>
+        </div>
+
+        <!-- Chat History List -->
+        <div class="flex-1 overflow-y-auto">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 block">Messages</span>
+          <div id="chat-threads-list" class="space-y-1">
+            <!-- Threads generated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Area: Chat Window / Empty State -->
+      <div id="chat-main" class="hidden md:flex flex-1 h-full flex-col bg-slate-950/60 rounded-2xl border border-slate-800/80 overflow-hidden relative">
+        
+        <!-- Active Chat Header -->
+        <div id="active-chat-header" class="h-16 border-b border-slate-800 px-4 flex items-center justify-between bg-slate-900/80">
+          <div class="flex items-center gap-3">
+            <button onclick="toggleMobileChatList()" class="md:hidden text-slate-400 hover:text-white mr-1">
+              <i class="fa-solid fa-chevron-left text-lg"></i>
+            </button>
+            <div class="relative">
+              <img id="chat-user-avatar" src="" class="w-10 h-10 rounded-full object-cover border border-slate-700">
+              <span id="chat-user-online" class="w-3 h-3 bg-emerald-500 border-2 border-slate-950 rounded-full absolute bottom-0 right-0"></span>
+            </div>
+            <div>
+              <h4 id="chat-user-name" class="font-bold text-slate-100 text-sm">Select a match</h4>
+              <p id="chat-user-status" class="text-xs text-emerald-400">Active now</p>
+            </div>
+          </div>
+
+          <!-- Header Right Action Buttons: Video Call, Translator, Profile Info -->
+          <div class="flex items-center gap-1.5">
+            <!-- AI Translator Toggle -->
+            <button id="translator-toggle-btn" onclick="toggleTranslatorMode()" class="px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:text-rose-400 hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 transition-all" title="Toggle AI Translator">
+              <i class="fa-solid fa-language text-rose-500"></i>
+              <span id="translator-lang-label" class="hidden sm:inline">Translate (ES)</span>
+            </button>
+
+            <!-- Video Call Trigger -->
+            <button onclick="startVideoCall()" class="w-9 h-9 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 flex items-center justify-center transition-colors" title="Start Video Call">
+              <i class="fa-solid fa-video text-sm"></i>
+            </button>
+
+            <!-- User Detail -->
+            <button onclick="showProfileDetailFromChat()" class="text-slate-400 hover:text-rose-400 p-2 text-sm rounded-lg hover:bg-slate-800 transition-colors">
+              <i class="fa-solid fa-circle-info text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Messages Scroll Area -->
+        <div id="chat-messages-container" class="flex-1 p-4 overflow-y-auto space-y-3">
+          <!-- Messages rendered dynamically -->
+        </div>
+
+        <!-- AI Language Translator Settings Bar (Hidden by default) -->
+        <div id="translator-bar" class="hidden px-4 py-2 bg-rose-950/30 border-t border-rose-500/20 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-rose-400"></i>
+            <span class="text-rose-200 font-semibold">AI Real-Time Translation Enabled</span>
+          </div>
+          <select id="target-language" onchange="changeTargetLanguage(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-md px-2 py-1 focus:outline-none focus:border-rose-500">
+            <option value="es">Spanish (Español)</option>
+            <option value="fr">French (Français)</option>
+            <option value="ja">Japanese (日本語)</option>
+            <option value="de">German (Deutsch)</option>
+            <option value="it">Italian (Italiano)</option>
+          </select>
+        </div>
+
+        <!-- Quick AI Icebreakers Prompt Suggestions -->
+        <div id="icebreakers-bar" class="px-4 py-2 bg-slate-900/40 border-t border-slate-800/40 flex items-center gap-2 overflow-x-auto text-xs scrollbar-none">
+          <span class="text-slate-500 font-semibold shrink-0"><i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Icebreakers:</span>
+          <button onclick="useIcebreaker('Coffee or drinks for a first date? ☕️')" class="shrink-0 px-3 py-1 rounded-full bg-slate-800/80 hover:bg-rose-500/20 hover:text-rose-300 text-slate-300 transition-colors border border-slate-700/50">☕️ Coffee or drinks?</button>
+          <button onclick="useIcebreaker('What\'s your go-to weekend adventure? 🌲')" class="shrink-0 px-3 py-1 rounded-full bg-slate-800/80 hover:bg-rose-500/20 hover:text-rose-300 text-slate-300 transition-colors border border-slate-700/50">🌲 Weekend vibe?</button>
+          <button onclick="useIcebreaker('Two truths and one lie... go! 🤫')" class="shrink-0 px-3 py-1 rounded-full bg-slate-800/80 hover:bg-rose-500/20 hover:text-rose-300 text-slate-300 transition-colors border border-slate-700/50">🤫 2 truths & 1 lie</button>
+        </div>
+
+        <!-- Voice Recording Audio Bar (Active during recording) -->
+        <div id="voice-recording-bar" class="hidden px-4 py-3 bg-rose-950/40 border-t border-rose-500/40 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="w-3 h-3 bg-rose-500 rounded-full animate-ping"></span>
+            <span class="text-xs font-semibold text-rose-300">Recording Voice Note... <span id="recording-time">0:03</span></span>
+            <div class="flex items-center gap-1 h-4">
+              <span class="w-1 bg-rose-500 h-2 animate-bounce"></span>
+              <span class="w-1 bg-rose-400 h-4 animate-bounce delay-75"></span>
+              <span class="w-1 bg-rose-500 h-3 animate-bounce delay-150"></span>
+              <span class="w-1 bg-rose-300 h-2 animate-bounce"></span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="cancelVoiceRecording()" class="px-3 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white text-xs">Cancel</button>
+            <button onclick="sendVoiceNote()" class="px-3 py-1 rounded-lg bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-500/20">Send Note</button>
+          </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form id="chat-form" onsubmit="sendChatMessage(event)" class="p-3 bg-slate-900/90 border-t border-slate-800 flex items-center gap-2">
+          <!-- Voice Note Button -->
+          <button type="button" onclick="startVoiceRecording()" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-rose-400 hover:bg-slate-700 flex items-center justify-center transition-all shrink-0" title="Hold/Click to record voice note">
+            <i class="fa-solid fa-microphone text-sm"></i>
+          </button>
+
+          <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500">
+          
+          <button type="submit" class="w-10 h-10 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-md shadow-rose-500/20 shrink-0">
+            <i class="fa-solid fa-paper-plane text-sm"></i>
+          </button>
+        </form>
+
+        <!-- No Selected Chat Placeholder -->
+        <div id="no-chat-placeholder" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 text-center z-10">
+          <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-2xl mb-3">
+            <i class="fa-solid fa-comments"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-1">Your Messages</h3>
+          <p class="text-sm text-slate-400 max-w-xs">Select a match from the left sidebar to start chatting, send voice notes, or video call!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: USER PROFILE EDITING ==================== -->
+    <section id="view-profile" class="hidden w-full h-full max-w-2xl mx-auto overflow-y-auto pr-1">
+      <div class="glass-panel rounded-3xl p-6 space-y-6 border border-slate-800">
+        
+        <!-- Header / Save Banner -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div>
+            <h2 class="text-2xl font-bold text-white">Edit Profile</h2>
+        <p class="text-xs text-slate-400">Make your profile shine to get 3x more matches</p>
+      </div>
+      <button onclick="saveUserProfile()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-semibold text-sm shadow-lg shadow-rose-500/20 hover:opacity-90 active:scale-95 transition-all flex items-center gap-2">
+        <i class="fa-solid fa-check"></i> Save Changes
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. FILTER & PREFERENCES MODAL -->
+  <div id="filter-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-rose-500"></i> Discovery Preferences
+        </h3>
+        <button onclick="closeFilterModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Distance Slider -->
+      <div>
+        <div class="flex justify-between text-sm mb-2">
+          <span class="text-slate-300 font-medium">Maximum Distance</span>
+          <span id="dist-value" class="text-rose-400 font-bold">No Restriction</span>
+        </div>
+        <input type="range" id="filter-distance" min="5" max="500" value="500" oninput="document.getElementById('dist-value').innerText = this.value >= 500 ? 'No Restriction' : this.value + ' miles'" class="w-full accent-rose-500 bg-slate-800 rounded-lg cursor-pointer">
+      </div>
+
+      <!-- Age Range Slider -->
+      <div>
+        <div class="flex justify-between text-sm mb-2">
+          <span class="text-slate-300 font-medium">Age Range</span>
+          <span id="age-range-value" class="text-rose-400 font-bold">17 - 35</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <input type="range" id="filter-age-min" min="17" max="50" value="17" oninput="updateAgeLabel()" class="w-full accent-rose-500 bg-slate-800 rounded-lg">
+          <input type="range" id="filter-age-max" min="18" max="65" value="35" oninput="updateAgeLabel()" class="w-full accent-rose-500 bg-slate-800 rounded-lg">
+        </div>
+      </div>
+
+      <!-- Show Me Gender Filter -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Show Me</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="setGenderFilter('women')" id="gender-women" class="gender-btn py-2.5 rounded-xl border border-rose-500 bg-rose-500/10 text-rose-400 text-xs font-bold">Women</button>
+          <button type="button" onclick="setGenderFilter('men')" id="gender-men" class="gender-btn py-2.5 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 text-xs font-bold">Men</button>
+          <button type="button" onclick="setGenderFilter('everyone')" id="gender-everyone" class="gender-btn py-2.5 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 text-xs font-bold">Everyone</button>
+        </div>
+      </div>
+
+      <button onclick="applyFilters()" class="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold text-sm shadow-lg shadow-rose-500/20 hover:opacity-90 transition-all">
+        Apply Preferences
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. VIDEO CALL MODAL -->
+  <div id="video-call-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/90 backdrop-blur-xl">
+    <div class="w-full max-w-4xl h-[85vh] bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
+      
+      <!-- Video Feed Grid Container -->
+      <div class="relative flex-1 bg-slate-950 overflow-hidden flex items-center justify-center">
+        <!-- Main Match Remote Video View -->
+        <img id="call-remote-video" src="" onerror="handleImgError(this)" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-transparent to-slate-950/80 pointer-events-none"></div>
+
+        <!-- Video Overlay Header Info -->
+        <div class="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+          <div class="flex items-center gap-3 bg-slate-950/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-800/60">
+            <img id="call-remote-avatar" src="" class="w-9 h-9 rounded-full object-cover border border-rose-500">
+            <div>
+              <h4 id="call-remote-name" class="font-bold text-white text-sm">Match Name</h4>
+              <p class="text-[10px] text-emerald-400 flex items-center gap-1">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Spark Video Call • <span id="call-timer">00:12</span>
+              </p>
+            </div>
+          </div>
+          
+          <button onclick="toggleVideoBeautyFilter()" id="beauty-filter-btn" class="px-3 py-1.5 rounded-xl bg-slate-950/60 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-amber-400 text-xs font-semibold flex items-center gap-1.5">
+            <i class="fa-solid fa-sparkles text-amber-400"></i> Glow Filter
+          </button>
+        </div>
+
+        <!-- Picture-in-Picture Self Video Frame -->
+        <div class="absolute bottom-6 right-6 w-32 sm:w-44 h-48 sm:h-60 rounded-2xl overflow-hidden border-2 border-rose-500/80 shadow-2xl bg-slate-900 z-20">
+          <img id="call-self-video" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
+          <span class="absolute bottom-2 left-2 text-[10px] bg-slate-950/80 text-white px-2 py-0.5 rounded-md font-semibold">You</span>
+        </div>
+      </div>
+
+      <!-- Video Call Controls Bar -->
+      <div class="h-20 bg-slate-950 border-t border-slate-800/80 px-6 flex items-center justify-center gap-6 shrink-0">
+        <!-- Mic Toggle Button -->
+        <button onclick="toggleMic()" id="btn-mic" class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 text-white flex items-center justify-center hover:bg-slate-700 transition-colors">
+          <i class="fa-solid fa-microphone text-lg"></i>
+        </button>
+
+        <!-- End Call Button -->
+        <button onclick="endVideoCall()" class="w-14 h-14 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/40 flex items-center justify-center transition-all scale-105">
+          <i class="fa-solid fa-phone-slash text-xl"></i>
+        </button>
+
+        <!-- Camera Toggle Button -->
+        <button onclick="toggleCamera()" id="btn-camera" class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 text-white flex items-center justify-center hover:bg-slate-700 transition-colors">
+          <i class="fa-solid fa-video text-lg"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. PROFILE DETAIL EXPANDED MODAL -->
+  <div id="detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md">
+    <div class="w-full max-w-lg h-[90vh] bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
+      <button onclick="closeDetailModal()" class="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-slate-950/80 backdrop-blur-md text-white flex items-center justify-center hover:bg-slate-950">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+      <div id="detail-modal-body" class="flex-1 overflow-y-auto">
+        <!-- Content inserted dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. CUSTOM TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 border border-rose-500/50 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3">
+    <i class="fa-solid fa-circle-check text-rose-500 text-lg"></i>
+    <span id="toast-message" class="text-sm font-semibold">Profile updated!</span>
+  </div>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // Safe Image Fallback Helper
+    function handleImgError(img) {
+      img.onerror = null;
+      img.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600';
+    }
+
+    // --- APP STATE & INITIAL MOCK DATA ---
+    let currentUserProfile = {
+      name: "Alex Taylor",
+      age: 26,
+      job: "UX Designer & Adventurer",
+      location: "San Francisco, CA",
+      bio: "Coffee enthusiast ☕️, urban explorer 🏙️, looking for someone to share good food and live music with!",
+      photos: [
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800",
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800",
+        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=800"
+      ],
+      interests: ["Photography", "Hiking", "Specialty Coffee", "Live Music", "Design", "Tacos"]
+    };
+
+    const initialProfiles = [
+      {
+        id: "p1",
+        name: "Maya Lin",
+        age: 24,
+        job: "Architectural Designer",
+        distance: "3 miles away",
+        bio: "Designing spaces by day, hunting for the best ramen in town by night. Passionate about pottery and film cameras 📷",
+        photos: [
+          "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800",
+          "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=800"
+        ],
+        interests: ["Architecture", "Analog Photography", "Ramen", "Pottery", "Indie Pop"],
+        gender: "women"
+      },
+      {
+        id: "p2",
+        name: "Lucas Vance",
+        age: 27,
+        job: "Software Engineer & Surfer",
+        distance: "5 miles away",
+        bio: "Catching waves in Pacifica on weekends 🏄‍♂️. Big fan of vinyl records, spicy tacos, and spontaneous road trips.",
+        photos: [
+          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800",
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800"
+        ],
+        interests: ["Surfing", "Vinyl Records", "Tacos", "Coding", "Camping"],
+        gender: "men"
+      },
+      {
+        id: "p3",
+        name: "Chloe Bennett",
+        age: 25,
+        job: "Barista & Illustrator",
+        distance: "2 miles away",
+        bio: "I make cute doodles on coffee cups ☕️🎨 looking for someone to explore museum exhibits and hidden speakeasies.",
+        photos: [
+          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=800",
+          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=800"
+        ],
+        interests: ["Illustration", "Latte Art", "Art Galleries", "Vintage Fashion"],
+        gender: "women"
+      },
+      {
+        id: "p4",
+        name: "Daniel Kim",
+        age: 28,
+        job: "Product Manager",
+        distance: "8 miles away",
+        bio: "Foodie at heart. Let's debate whether boba is better with 50% or 70% sugar. Always up for bouldering!",
+        photos: [
+          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=800"
+        ],
+        interests: ["Bouldering", "Boba", "Tech", "Cooking", "Board Games"],
+        gender: "men"
+      },
+      {
+        id: "p5",
+        name: "Sophia Martinez",
+        age: 23,
+        job: "Yoga Instructor",
+        distance: "4 miles away",
+        bio: "Mindfulness, golden hour walks, and plant mom to over 20 succulents 🌿. Looking for good energy and deep conversations.",
+        photos: [
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800"
+        ],
+        interests: ["Yoga", "Plants", "Meditation", "Matcha", "Hiking"],
+        gender: "women"
+      }
+    ];
+
+    let exploreQueue = [...initialProfiles];
+    let matches = [
+      {
+        profile: initialProfiles[0],
+        lastMessage: "Hey Alex! Love your travel photos! Where was that mountain shot taken?",
+        timestamp: "10:42 AM",
+        unread: true,
+        messages: [
+          { sender: 'them', text: "Hey Alex! Love your travel photos! Where was that mountain shot taken?", time: "10:42 AM" }
+        ]
+      }
+    ];
+
+    let activeChatMatchId = null;
+    let selectedGenderFilter = 'everyone';
+
+    // --- NEW FEATURE STATES ---
+    let translatorActive = false;
+    let selectedLanguage = 'es';
+    let isRecordingVoice = false;
+    let voiceRecordingSeconds = 0;
+    let voiceTimerInterval = null;
+    let callTimerInterval = null;
+    let callSeconds = 0;
+    let micMuted = false;
+    let cameraOff = false;
+
+    // Translation Dictionaries (Mock translations)
+    const mockTranslations = {
+      es: {
+        "Hey Alex! Love your travel photos! Where was that mountain shot taken?": "¡Hola Alex! ¡Me encantan tus fotos de viajes! ¿Dónde te tomaste esa foto en la montaña?",
+        "Haha that's awesome! 😊": "¡Jaja eso es genial! 😊",
+        "Coffee or drinks for a first date? ☕️": "¿Café o tragos para una primera cita? ☕️",
+        "What's your go-to weekend adventure? 🌲": "¿Cuál es tu aventura favorita de fin de semana? 🌲"
+      },
+      fr: {
+        "Hey Alex! Love your travel photos! Where was that mountain shot taken?": "Salut Alex! J'adore vos photos de voyage! Où cette photo de montagne a-t-elle été prise?",
+        "Haha that's awesome! 😊": "Haha c'est génial! 😊",
+        "Coffee or drinks for a first date? ☕️": "Café ou verre pour un premier rendez-vous? ☕️"
+      },
+      ja: {
+        "Hey Alex! Love your travel photos! Where was that mountain shot taken?": "アレックス、こんにちは！旅行の写真が素敵ですね！山の写真はどこで撮影されたのですか？",
+        "Haha that's awesome! 😊": "はは、それは素晴らしいですね！😊"
+      }
+    };
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+      try {
+        renderExploreCards();
+        renderMatchesUI();
+        renderUserProfileForm();
+        setupKeyListeners();
+      } catch (err) {
+        console.error("Initialization error:", err);
+      }
+    };
+
+    // Notification toast helper
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-message');
+      toastMsg.innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // --- NAVIGATION LOGIC ---
+    function switchTab(tabName) {
+      document.getElementById('view-explore').classList.add('hidden');
+      document.getElementById('view-matches').classList.add('hidden');
+      document.getElementById('view-profile').classList.add('hidden');
+
+      const tabs = ['explore', 'matches', 'profile'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`nav-${t}`);
+        const mobBtn = document.getElementById(`mob-nav-${t}`);
+        if(btn) btn.className = "tab-btn px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center gap-2";
+        if(mobBtn) mobBtn.className = "flex flex-col items-center gap-1 text-slate-500";
+      });
+
+      const activeBtn = document.getElementById(`nav-${tabName}`);
+      const activeMobBtn = document.getElementById(`mob-nav-${tabName}`);
+      if(activeBtn) activeBtn.className = "tab-btn px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 bg-rose-500 text-white shadow-md shadow-rose-500/25 flex items-center gap-2";
+      if(activeMobBtn) activeMobBtn.className = "flex flex-col items-center gap-1 text-rose-500";
+
+      document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+      if(tabName === 'matches' && matches.length > 0 && !activeChatMatchId) {
+        selectChatMatch(matches[0].profile.id);
+      }
+    }
+
+    // --- EXPLORE / SWIPING ENGINE ---
+    function renderExploreCards() {
+      const container = document.getElementById('card-stack');
+      const emptyState = document.getElementById('no-more-cards');
+      container.innerHTML = '';
+
+      if (exploreQueue.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      const visibleProfiles = exploreQueue.slice(0, 2).reverse();
+      
+      visibleProfiles.forEach((profile, idx) => {
+        const isTop = idx === visibleProfiles.length - 1;
+        const card = document.createElement('div');
+        card.id = `card-${profile.id}`;
+        card.className = `absolute w-full h-full rounded-3xl overflow-hidden glass-card border border-slate-800/80 shadow-2xl transition-transform duration-300 flex flex-col justify-between ${
+          isTop ? 'z-20 cursor-grab active:cursor-grabbing' : 'z-10 scale-95 translate-y-3 opacity-60'
+        }`;
+
+        card.innerHTML = `
+          <div class="relative w-full h-full">
+            <img src="${profile.photos[0]}" onerror="handleImgError(this)" class="w-full h-full object-cover select-none">
+            
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+
+            <div id="badge-like-${profile.id}" class="absolute top-6 left-6 border-4 border-emerald-400 text-emerald-400 font-extrabold text-2xl uppercase tracking-widest px-4 py-1.5 rounded-xl rotate-[-15deg] opacity-0 pointer-events-none">
+              LIKE
+            </div>
+            <div id="badge-dislike-${profile.id}" class="absolute top-6 right-6 border-4 border-rose-500 text-rose-500 font-extrabold text-2xl uppercase tracking-widest px-4 py-1.5 rounded-xl rotate-[15deg] opacity-0 pointer-events-none">
+              NOPE
+            </div>
+
+            <div class="absolute bottom-0 inset-x-0 p-6 space-y-3">
+              <div class="flex items-baseline justify-between">
+                <div>
+                  <h3 class="text-3xl font-extrabold text-white flex items-center gap-2">
+                    ${profile.name}, ${profile.age}
+                    <i class="fa-solid fa-circle-check text-rose-500 text-lg" title="Verified Profile"></i>
+                  </h3>
+                  <p class="text-sm font-medium text-slate-300 flex items-center gap-1.5 mt-0.5">
+                    <i class="fa-solid fa-briefcase text-xs text-rose-400"></i> ${profile.job}
+                  </p>
+                </div>
+                <button onclick="openDetailModal('${profile.id}')" class="w-10 h-10 rounded-full bg-slate-900/80 backdrop-blur-md text-white border border-slate-700/60 flex items-center justify-center hover:bg-slate-800">
+                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                </button>
+              </div>
+
+              <p class="text-xs text-slate-400 flex items-center gap-1">
+                <i class="fa-solid fa-location-dot text-rose-500"></i> ${profile.distance}
+              </p>
+
+              <p class="text-sm text-slate-200 line-clamp-2">${profile.bio}</p>
+
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                ${profile.interests.map(tag => `<span class="px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-700/50 text-[11px] font-semibold text-slate-300">${tag}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+
+        if (isTop) {
+          attachCardDragListeners(card, profile.id);
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    function attachCardDragListeners(cardElement, profileId) {
+      let isDragging = false;
+      let startX = 0, startY = 0, currentX = 0, currentY = 0;
+
+      const onStart = (e) => {
+        isDragging = true;
+        startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        cardElement.style.transition = 'none';
+      };
+
+      const onMove = (e) => {
+        if (!isDragging) return;
+        const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        currentX = x - startX;
+        currentY = y - startY;
+
+        const rotate = currentX * 0.08;
+        cardElement.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotate}deg)`;
+
+        const likeBadge = document.getElementById(`badge-like-${profileId}`);
+        const dislikeBadge = document.getElementById(`badge-dislike-${profileId}`);
+
+        if (currentX > 40) {
+          if(likeBadge) likeBadge.style.opacity = Math.min(currentX / 120, 1);
+          if(dislikeBadge) dislikeBadge.style.opacity = 0;
+        } else if (currentX < -40) {
+          if(dislikeBadge) dislikeBadge.style.opacity = Math.min(Math.abs(currentX) / 120, 1);
+          if(likeBadge) likeBadge.style.opacity = 0;
+        } else {
+          if(likeBadge) likeBadge.style.opacity = 0;
+          if(dislikeBadge) dislikeBadge.style.opacity = 0;
+        }
+      };
+
+      const onEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        cardElement.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+
+        if (currentX > 120) {
+          handleSwipeAction('like');
+        } else if (currentX < -120) {
+          handleSwipeAction('dislike');
+        } else {
+          cardElement.style.transform = 'translate3d(0, 0, 0) rotate(0deg)';
+          const likeBadge = document.getElementById(`badge-like-${profileId}`);
+          const dislikeBadge = document.getElementById(`badge-dislike-${profileId}`);
+          if(likeBadge) likeBadge.style.opacity = 0;
+          if(dislikeBadge) dislikeBadge.style.opacity = 0;
+        }
+        currentX = 0; currentY = 0;
+      };
+
+      cardElement.addEventListener('mousedown', onStart);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onEnd);
+
+      cardElement.addEventListener('touchstart', onStart);
+      window.addEventListener('touchmove', onMove);
+      window.addEventListener('touchend', onEnd);
+    }
+
+    function handleSwipeAction(action) {
+      if (exploreQueue.length === 0) return;
+      const targetProfile = exploreQueue[0];
+      const card = document.getElementById(`card-${targetProfile.id}`);
+
+      if (card) {
+        if (action === 'like') card.classList.add('card-swipe-like');
+        else if (action === 'dislike') card.classList.add('card-swipe-dislike');
+        else if (action === 'superlike') card.classList.add('card-swipe-superlike');
+      }
+
+      setTimeout(() => {
+        exploreQueue.shift();
+        if ((action === 'like' || action === 'superlike') && Math.random() > 0.3) {
+          triggerSparkMatch(targetProfile);
+        } else {
+          renderExploreCards();
+        }
+      }, 300);
+    }
+
+    function triggerSparkMatch(profile) {
+      if (!matches.some(m => m.profile.id === profile.id)) {
+        matches.unshift({
+          profile: profile,
+          lastMessage: "You matched! Say hello 👋",
+          timestamp: "Just now",
+          unread: true,
+          messages: []
+        });
+        renderMatchesUI();
+      }
+
+      document.getElementById('match-modal-text').innerText = `You and ${profile.name} liked each other.`;
+      document.getElementById('match-modal-user-img').src = currentUserProfile.photos[0];
+      document.getElementById('match-modal-target-img').src = profile.photos[0];
+      document.getElementById('match-modal').classList.remove('hidden');
+      
+      activeChatMatchId = profile.id;
+    }
+
+    function closeMatchModal() {
+      document.getElementById('match-modal').classList.add('hidden');
+      renderExploreCards();
+    }
+
+    function openChatFromMatchModal() {
+      closeMatchModal();
+      switchTab('matches');
+      selectChatMatch(activeChatMatchId);
+    }
+
+    function resetExploreCards() {
+      exploreQueue = [...initialProfiles];
+      renderExploreCards();
+    }
+
+    function setupKeyListeners() {
+      window.addEventListener('keydown', (e) => {
+        const exploreVisible = !document.getElementById('view-explore').classList.contains('hidden');
+        if (!exploreVisible) return;
+
+        if (e.key === 'ArrowLeft') handleSwipeAction('dislike');
+        if (e.key === 'ArrowRight') handleSwipeAction('like');
+        if (e.key === 'ArrowUp') handleSwipeAction('superlike');
+      });
+    }
+
+    // --- MATCHES & CHAT SYSTEM ---
+    function renderMatchesUI() {
+      const row = document.getElementById('new-matches-row');
+      const threads = document.getElementById('chat-threads-list');
+      const badge = document.getElementById('matches-count-badge');
+
+      if (!row || !threads) return;
+
+      row.innerHTML = '';
+      threads.innerHTML = '';
+      badge.innerText = matches.length;
+
+      let hasUnread = false;
+
+      matches.forEach(m => {
+        if(m.unread) hasUnread = true;
+
+        const bubble = document.createElement('div');
+        bubble.className = "flex flex-col items-center gap-1 cursor-pointer shrink-0 group";
+        bubble.onclick = () => selectChatMatch(m.profile.id);
+        bubble.innerHTML = `
+          <div class="w-14 h-14 rounded-full border-2 border-rose-500 p-0.5 group-hover:scale-105 transition-transform">
+            <img src="${m.profile.photos[0]}" onerror="handleImgError(this)" class="w-full h-full object-cover rounded-full">
+          </div>
+          <span class="text-[11px] font-semibold text-slate-300 group-hover:text-rose-400 truncate max-w-[60px]">${m.profile.name.split(' ')[0]}</span>
+        `;
+        row.appendChild(bubble);
+
+        const item = document.createElement('div');
+        item.className = `p-3 rounded-2xl flex items-center gap-3 cursor-pointer transition-colors ${
+          activeChatMatchId === m.profile.id ? 'bg-slate-800 border border-slate-700/50' : 'hover:bg-slate-900/80'
+        }`;
+        item.onclick = () => selectChatMatch(m.profile.id);
+        item.innerHTML = `
+          <div class="relative shrink-0">
+            <img src="${m.profile.photos[0]}" onerror="handleImgError(this)" class="w-12 h-12 rounded-full object-cover">
+            ${m.unread ? '<span class="w-3 h-3 bg-rose-500 rounded-full border-2 border-slate-950 absolute top-0 right-0"></span>' : ''}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-baseline">
+              <h5 class="text-sm font-bold text-white truncate">${m.profile.name}</h5>
+              <span class="text-[10px] text-slate-500 shrink-0">${m.timestamp}</span>
+            </div>
+            <p class="text-xs ${m.unread ? 'text-slate-100 font-semibold' : 'text-slate-400'} truncate mt-0.5">${m.lastMessage}</p>
+          </div>
+        `;
+        threads.appendChild(item);
+      });
+
+      const unreadBadge = document.getElementById('unread-badge');
+      const mobUnreadBadge = document.getElementById('mob-unread-badge');
+      if (hasUnread) {
+        if(unreadBadge) unreadBadge.classList.remove('hidden');
+        if(mobUnreadBadge) mobUnreadBadge.classList.remove('hidden');
+      } else {
+        if(unreadBadge) unreadBadge.classList.add('hidden');
+        if(mobUnreadBadge) mobUnreadBadge.classList.add('hidden');
+      }
+    }
+
+    function selectChatMatch(profileId) {
+      activeChatMatchId = profileId;
+      const matchObj = matches.find(m => m.profile.id === profileId);
+      if (!matchObj) return;
+
+      matchObj.unread = false;
+      renderMatchesUI();
+
+      document.getElementById('no-chat-placeholder').classList.add('hidden');
+      document.getElementById('chat-main').classList.remove('hidden');
+      document.getElementById('chat-main').classList.add('flex');
+
+      document.getElementById('chat-user-avatar').src = matchObj.profile.photos[0];
+      document.getElementById('chat-user-name').innerText = matchObj.profile.name;
+
+      renderChatMessages();
+    }
+
+    function renderChatMessages() {
+      const matchObj = matches.find(m => m.profile.id === activeChatMatchId);
+      if (!matchObj) return;
+
+      const container = document.getElementById('chat-messages-container');
+      container.innerHTML = '';
+
+      if (matchObj.messages.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-500 text-xs">
+            You matched with <span class="font-bold text-slate-300">${matchObj.profile.name}</span>! Send a message or pick an icebreaker below.
+          </div>
+        `;
+      } else {
+        matchObj.messages.forEach((msg, i) => {
+          const bubble = document.createElement('div');
+          const isMe = msg.sender === 'me';
+          bubble.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+          
+          if (msg.type === 'voice') {
+            // Voice Note Audio Player UI
+            bubble.innerHTML = `
+              <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
+                isMe ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-br-none' : 'bg-slate-800 text-slate-100 rounded-bl-none border border-slate-700/50'
+              }">
+                <div class="flex items-center gap-3">
+                  <button onclick="playVoiceNote(this)" class="w-8 h-8 rounded-full bg-slate-950/40 hover:bg-slate-950/60 flex items-center justify-center text-white shrink-0">
+                    <i class="fa-solid fa-play text-xs pl-0.5"></i>
+                  </button>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-1 h-5">
+                      <span class="w-1 bg-white/70 h-3 rounded-full"></span>
+                      <span class="w-1 bg-white/90 h-5 rounded-full"></span>
+                      <span class="w-1 bg-white/50 h-2 rounded-full"></span>
+                      <span class="w-1 bg-white/80 h-4 rounded-full"></span>
+                      <span class="w-1 bg-white/60 h-3 rounded-full"></span>
+                      <span class="w-1 bg-white/90 h-5 rounded-full"></span>
+                      <span class="w-1 bg-white/40 h-2 rounded-full"></span>
+                    </div>
+                    <span class="text-[10px] opacity-70 block mt-0.5">${msg.duration || '0:04'}</span>
+                  </div>
+                </div>
+                <span class="text-[10px] opacity-70 block text-right mt-1">${msg.time}</span>
+              </div>
+            `;
+          } else {
+            // Standard Text / Translated Text UI
+            let displayedText = msg.text;
+            if (translatorActive && !isMe && mockTranslations[selectedLanguage]?.[msg.text]) {
+              displayedText = mockTranslations[selectedLanguage][msg.text];
+            }
+
+            bubble.innerHTML = `
+              <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
+                isMe 
+                  ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-br-none shadow-md shadow-rose-500/10' 
+                  : 'bg-slate-800 text-slate-100 rounded-bl-none border border-slate-700/50'
+              }">
+                <p>${displayedText}</p>
+                ${translatorActive && !isMe ? `<span class="text-[9px] text-rose-300/80 block mt-0.5 flex items-center gap-1"><i class="fa-solid fa-language"></i> Translated to ${selectedLanguage.toUpperCase()}</span>` : ''}
+                <span class="text-[10px] opacity-70 block text-right mt-1">${msg.time}</span>
+              </div>
+            `;
+          }
+
+          container.appendChild(bubble);
+        });
+      }
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // --- LANGUAGE TRANSLATOR LOGIC ---
+    function toggleTranslatorMode() {
+      translatorActive = !translatorActive;
+      const bar = document.getElementById('translator-bar');
+      const btn = document.getElementById('translator-toggle-btn');
+      
+      if (translatorActive) {
+        bar.classList.remove('hidden');
+        btn.classList.add('bg-rose-500', 'text-white');
+        btn.classList.remove('bg-slate-800/80', 'text-slate-300');
+        showToast("AI Translator Activated");
+      } else {
+        bar.classList.add('hidden');
+        btn.classList.remove('bg-rose-500', 'text-white');
+        btn.classList.add('bg-slate-800/80', 'text-slate-300');
+      }
+      renderChatMessages();
+    }
+
+    function changeTargetLanguage(lang) {
+      selectedLanguage = lang;
+      document.getElementById('translator-lang-label').innerText = `Translate (${lang.toUpperCase()})`;
+      renderChatMessages();
+    }
+
+    // --- VOICE NOTE LOGIC ---
+    function startVoiceRecording() {
+      isRecordingVoice = true;
+      voiceRecordingSeconds = 0;
+      document.getElementById('voice-recording-bar').classList.remove('hidden');
+      
+      voiceTimerInterval = setInterval(() => {
+        voiceRecordingSeconds++;
+        const mins = Math.floor(voiceRecordingSeconds / 60);
+        const secs = voiceRecordingSeconds % 60;
+        document.getElementById('recording-time').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      }, 1000);
+    }
+
+    function cancelVoiceRecording() {
+      isRecordingVoice = false;
+      clearInterval(voiceTimerInterval);
+      document.getElementById('voice-recording-bar').classList.add('hidden');
+    }
+
+    function sendVoiceNote() {
+      if (!isRecordingVoice || !activeChatMatchId) return;
+      
+      const matchObj = matches.find(m => m.profile.id === activeChatMatchId);
+      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const durationStr = `0:${voiceRecordingSeconds < 10 ? '0' : ''}${voiceRecordingSeconds}`;
+
+      matchObj.messages.push({
+        sender: 'me',
+        type: 'voice',
+        duration: durationStr,
+        time: currentTime
+      });
+      matchObj.lastMessage = "🎤 Voice note";
+      matchObj.timestamp = currentTime;
+
+      cancelVoiceRecording();
+      renderChatMessages();
+      renderMatchesUI();
+    }
+
+    function playVoiceNote(btn) {
+      const icon = btn.querySelector('i');
+      if (icon.classList.contains('fa-play')) {
+        icon.className = 'fa-solid fa-pause text-xs';
+        setTimeout(() => {
+          icon.className = 'fa-solid fa-play text-xs pl-0.5';
+        }, 3000);
+      } else {
+        icon.className = 'fa-solid fa-play text-xs pl-0.5';
+      }
+    }
+
+    // --- VIDEO CALL SYSTEM ---
+    function startVideoCall() {
+      if (!activeChatMatchId) return;
+      const matchObj = matches.find(m => m.profile.id === activeChatMatchId);
+
+      document.getElementById('call-remote-name').innerText = matchObj.profile.name;
+      document.getElementById('call-remote-avatar').src = matchObj.profile.photos[0];
+      document.getElementById('call-remote-video').src = matchObj.profile.photos[0];
+      
+      document.getElementById('video-call-modal').classList.remove('hidden');
+
+      callSeconds = 0;
+      callTimerInterval = setInterval(() => {
+        callSeconds++;
+        const m = Math.floor(callSeconds / 60);
+        const s = callSeconds % 60;
+        document.getElementById('call-timer').innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+      }, 1000);
+    }
+
+    function endVideoCall() {
+      clearInterval(callTimerInterval);
+      document.getElementById('video-call-modal').classList.add('hidden');
+      showToast("Call Ended");
+    }
+
+    function toggleMic() {
+      micMuted = !micMuted;
+      const btn = document.getElementById('btn-mic');
+      if(micMuted) {
+        btn.classList.add('bg-rose-600', 'text-white');
+        btn.innerHTML = `<i class="fa-solid fa-microphone-slash text-lg"></i>`;
+      } else {
+        btn.classList.remove('bg-rose-600');
+        btn.innerHTML = `<i class="fa-solid fa-microphone text-lg"></i>`;
+      }
+    }
+
+    function toggleCamera() {
+      cameraOff = !cameraOff;
+      const btn = document.getElementById('btn-camera');
+      const selfVid = document.getElementById('call-self-video');
+      if(cameraOff) {
+        btn.classList.add('bg-rose-600', 'text-white');
+        btn.innerHTML = `<i class="fa-solid fa-video-slash text-lg"></i>`;
+        selfVid.style.opacity = '0.2';
+      } else {
+        btn.classList.remove('bg-rose-600');
+        btn.innerHTML = `<i class="fa-solid fa-video text-lg"></i>`;
+        selfVid.style.opacity = '1';
+      }
+    }
+
+    function toggleVideoBeautyFilter() {
+      const vid = document.getElementById('call-remote-video');
+      if(vid.classList.contains('brightness-110')) {
+        vid.classList.remove('brightness-110', 'contrast-105', 'saturate-125');
+        showToast("Filter OFF");
+      } else {
+        vid.classList.add('brightness-110', 'contrast-105', 'saturate-125');
+        showToast("Glow Filter ON ✨");
+      }
+    }
+
+    function sendChatMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text || !activeChatMatchId) return;
+
+      const matchObj = matches.find(m => m.profile.id === activeChatMatchId);
+      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      matchObj.messages.push({ sender: 'me', text: text, time: currentTime });
+      matchObj.lastMessage = `You: ${text}`;
+      matchObj.timestamp = currentTime;
+
+      input.value = '';
+      renderChatMessages();
+      renderMatchesUI();
+
+      setTimeout(() => {
+        const replies = [
+          "Haha that's awesome! 😊",
+          "Totally agree with you! So what are your plans for the weekend?",
+          "Sounds like fun! We should grab a coffee and talk more about it ☕️",
+          "That's so interesting! Tell me more!"
+        ];
+        const randomReply = replies[Math.floor(Math.random() * replies.length)];
+        matchObj.messages.push({ sender: 'them', text: randomReply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+        matchObj.lastMessage = randomReply;
+        renderChatMessages();
+        renderMatchesUI();
+      }, 1500);
+    }
+
+    function useIcebreaker(text) {
+      document.getElementById('chat-input').value = text;
+      document.getElementById('chat-input').focus();
+    }
+
+    function filterMatchesList() {
+      const q = document.getElementById('match-search').value.toLowerCase();
+      const threads = document.getElementById('chat-threads-list').children;
+      Array.from(threads).forEach(item => {
+        const name = item.querySelector('h5')?.innerText.toLowerCase() || '';
+        item.style.display = name.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    function toggleMobileChatList() {
+      document.getElementById('chat-main').classList.add('hidden');
+    }
+
+    // --- USER PROFILE FORM LOGIC ---
+    function renderUserProfileForm() {
+      document.getElementById('header-avatar').src = currentUserProfile.photos[0];
+      document.getElementById('edit-name').value = currentUserProfile.name;
+      document.getElementById('edit-age').value = currentUserProfile.age;
+      document.getElementById('edit-job').value = currentUserProfile.job;
+      document.getElementById('edit-location').value = currentUserProfile.location;
+      document.getElementById('edit-bio').value = currentUserProfile.bio;
+
+      const photoGrid = document.getElementById('user-photos-grid');
+      photoGrid.innerHTML = '';
+      for(let i = 0; i < 4; i++) {
+        const photoUrl = currentUserProfile.photos[i];
+        const slot = document.createElement('div');
+        slot.className = "relative aspect-[3/4] rounded-2xl bg-slate-900 border-2 border-dashed border-slate-800 overflow-hidden flex flex-col items-center justify-center group cursor-pointer";
+        
+        if (photoUrl) {
+          slot.innerHTML = `
+            <img src="${photoUrl}" onerror="handleImgError(this)" class="w-full h-full object-cover">
+            <button onclick="removeUserPhoto(${i})" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-950/80 text-rose-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          `;
+        } else {
+          slot.innerHTML = `
+            <i class="fa-solid fa-plus text-slate-500 text-xl mb-1"></i>
+            <span class="text-[10px] text-slate-500 font-semibold">Add Photo</span>
+          `;
+          slot.onclick = () => addUserPhotoPrompt(i);
+        }
+        photoGrid.appendChild(slot);
+      }
+
+      const tagContainer = document.getElementById('interest-tags-container');
+      tagContainer.innerHTML = '';
+      currentUserProfile.interests.forEach(tag => {
+        const chip = document.createElement('span');
+        chip.className = "px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-2";
+        chip.innerHTML = `${tag} <i class="fa-solid fa-xmark cursor-pointer text-slate-400 hover:text-white" onclick="removeInterest('${tag}')"></i>`;
+        tagContainer.appendChild(chip);
+      });
+
+      const addBtn = document.createElement('button');
+      addBtn.className = "px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-400 text-xs font-semibold hover:border-slate-700 hover:text-white";
+      addBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Add Tag`;
+      addBtn.onclick = addInterestPrompt;
+      tagContainer.appendChild(addBtn);
+    }
+
+    function removeUserPhoto(index) {
+      currentUserProfile.photos.splice(index, 1);
+      renderUserProfileForm();
+    }
+
+    function addUserPhotoPrompt(index) {
+      const defaultSample = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800';
+      currentUserProfile.photos[index] = defaultSample;
+      renderUserProfileForm();
+      showToast("Sample photo added!");
+    }
+
+    function removeInterest(tag) {
+      currentUserProfile.interests = currentUserProfile.interests.filter(t => t !== tag);
+      renderUserProfileForm();
+    }
+
+    function addInterestPrompt() {
+      const sampleTags = ["Gaming", "Wine", "Tennis", "Cooking", "Travel", "Fitness"];
+      const nextTag = sampleTags[Math.floor(Math.random() * sampleTags.length)];
+      currentUserProfile.interests.push(nextTag);
+      renderUserProfileForm();
+      showToast(`Added '${nextTag}' interest!`);
+    }
+
+    function saveUserProfile() {
+      currentUserProfile.name = document.getElementById('edit-name').value;
+      currentUserProfile.age = document.getElementById('edit-age').value;
+      currentUserProfile.job = document.getElementById('edit-job').value;
+      currentUserProfile.location = document.getElementById('edit-location').value;
+      currentUserProfile.bio = document.getElementById('edit-bio').value;
+
+      renderUserProfileForm();
+      showToast("Profile updated successfully!");
+    }
+
+    // --- MODALS (PREFERENCES & DETAILED PROFILE) ---
+    function openFilterModal() {
+      document.getElementById('filter-modal').classList.remove('hidden');
+    }
+    function closeFilterModal() {
+      document.getElementById('filter-modal').classList.add('hidden');
+    }
+
+    function setGenderFilter(type) {
+      selectedGenderFilter = type;
+      ['women', 'men', 'everyone'].forEach(g => {
+        const btn = document.getElementById(`gender-${g}`);
+        if (g === type) {
+          btn.className = "gender-btn py-2.5 rounded-xl border border-rose-500 bg-rose-500/10 text-rose-400 text-xs font-bold";
+        } else {
+          btn.className = "gender-btn py-2.5 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 text-xs font-bold";
+        }
+      });
+    }
+
+    function updateAgeLabel() {
+      const min = document.getElementById('filter-age-min').value;
+      const max = document.getElementById('filter-age-max').value;
+      document.getElementById('age-range-value').innerText = `${min} - ${max}`;
+    }
+
+    function applyFilters() {
+      if (selectedGenderFilter === 'everyone') {
+        exploreQueue = [...initialProfiles];
+      } else {
+        exploreQueue = initialProfiles.filter(p => p.gender === selectedGenderFilter);
+      }
+      closeFilterModal();
+      renderExploreCards();
+      showToast("Preferences applied!");
+    }
+
+    function openDetailModal(profileId) {
+      const profile = initialProfiles.find(p => p.id === profileId);
+      if(!profile) return;
+
+      const body = document.getElementById('detail-modal-body');
+      body.innerHTML = `
+        <div class="relative w-full h-80">
+          <img src="${profile.photos[0]}" onerror="handleImgError(this)" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+        </div>
+        <div class="p-6 space-y-4 -mt-10 relative z-10">
+          <h3 class="text-3xl font-extrabold text-white">${profile.name}, ${profile.age}</h3>
+          <p class="text-sm font-semibold text-rose-400">${profile.job} • ${profile.distance}</p>
+
+          <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">About</h4>
+            <p class="text-sm text-slate-300 leading-relaxed">${profile.bio}</p>
+          </div>
+
+          <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Interests</h4>
+            <div class="flex flex-wrap gap-2">
+              ${profile.interests.map(t => `<span class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700/50">${t}</span>`).join('')}
+            </div>
+          </div>
+
+          ${profile.photos[1] ? `
+            <div class="space-y-2 pt-2">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">More Photos</h4>
+              <img src="${profile.photos[1]}" onerror="handleImgError(this)" class="w-full rounded-2xl object-cover h-64 border border-slate-800">
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detail-modal').classList.add('hidden');
+    }
+
+    function showProfileDetailFromChat() {
+      if(activeChatMatchId) {
+        openDetailModal(activeChatMatchId);
+      }
+    }
+  </script>
+</body>
+</html>
